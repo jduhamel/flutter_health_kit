@@ -79,7 +79,7 @@ extension HKQuantitySample {
 extension HKWorkout {
     var toJson: [String: Any] {
         var events: [Any] = []
-        for events in (workoutEvents ?? []) {
+        for event in (workoutEvents ?? []) {
             events.append([
                 "type": event.type,
                 "startTimestamp": event.dateInterval.start.timeIntervalSince1970,
