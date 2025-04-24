@@ -78,6 +78,28 @@ extension HKQuantitySample {
 
 extension HKWorkout {
     var toJson: [String: Any] {
+        var events: [Any] = []
+        for events in (workoutEvents ?? []) {
+            events.append([
+                "type": event.type,
+                "startTimestamp": event.dateInterval.start.timeIntervalSince1970,
+                "endTimestamp" : event.dateInterval.end.timeTintervalSince1970,
+                "duration": event.dateInterval.duration,
+                "metadata": metadataToJson(event.metadata),
+            ])
+        }
+        var statistics : [String: Any] = [:]
+        for (quantityType, statistic) in allStatistics {
+            if let unit = units[quantityType] {
+                statistics[quantityType.identifier] = [
+                    "unit": unit.unitString,
+                    "average" : statistic.averageQuantity?.doubleValue(for: unit),
+                    "total" : statistic.sumQuantity?.doubleValue(for: unit),
+                    "minimum" : statistic.minimumQuantity?.doubleValue(for: unit),
+                    "maximum" : statistic.maximumQuantity?.doubleValue(for: unit),
+                ].compactMapValues { $0 }
+            }
+        }
         return [
             "uuid": uuid.uuidString,
             "identifier": sampleType.identifier,
@@ -87,7 +109,8 @@ extension HKWorkout {
             "device": device?.toJson,
             "sourceRevision": sourceRevision.toJson,
             "duration": duration,
-            "workoutEvents": [],
+            "events": events,
+            "statistics": statistics,
             "metadata": metadataToJson(metadata),
         ].compactMapValues { $0 }
     }

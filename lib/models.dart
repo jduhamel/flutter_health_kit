@@ -36,6 +36,59 @@ abstract class Sample {
   final SampleTypeId type;
 }
 
+class WorkoutEvent {
+  factory WorkoutEvent.fromJson(Map<String, dynamic> json) => WorkoutEvent(
+        type: WorkoutEventType.values.firstWhere((e) => e.code == json['type']),
+        start: DateTime.fromMillisecondsSinceEpoch(
+          ((json['interval']['startTimestamp'] as double) * 1000).toInt(),
+        ),
+        end: DateTime.fromMillisecondsSinceEpoch(
+          ((json['interval']['endTimestamp'] as double) * 1000).toInt(),
+        ),
+        duration:
+            Duration(seconds: (json['interval']['duration'] as double).toInt()),
+        metadata: json['metadata'] != null ? Map.from(json['metadata']) : null,
+      );
+
+  WorkoutEvent({
+    required this.type,
+    required this.start,
+    required this.end,
+    required this.metadata,
+    this.duration,
+  });
+
+  final WorkoutEventType type;
+  final DateTime start;
+  final DateTime end;
+  final Duration? duration;
+  final Map<String, dynamic>? metadata;
+}
+
+class Statistic {
+  factory Statistic.fromJson(Map<String, dynamic> json) => Statistic(
+        unit: json['unit'],
+        average: json['average'],
+        total: json['total'],
+        maximum: json['maximum'],
+        minimum: json['minimum'],
+      );
+
+  Statistic({
+    required this.unit,
+    this.average,
+    this.total,
+    this.maximum,
+    this.minimum,
+  });
+
+  final double? average;
+  final double? total;
+  final double? maximum;
+  final double? minimum;
+  final String unit;
+}
+
 /// A workout sample.
 class Workout extends Sample {
   factory Workout.fromJson(Map<String, dynamic> json) {
@@ -262,7 +315,7 @@ class Category extends Sample {
         ((json['endTimestamp'] as double) * 1000).toInt(),
       ),
       type: HKCategoryTypeIdentifier.values.firstWhere(
-            (e) => e.identifier == json['categoryType'],
+        (e) => e.identifier == json['categoryType'],
       ),
       sourceRevision: SourceRevision.fromJson(Map.from(json['sourceRevision'])),
       device: json['device'] != null
@@ -288,8 +341,7 @@ class Category extends Sample {
   final int value;
 
   /// The type of category.
-  HKCategoryTypeIdentifier get categoryType =>
-      type as HKCategoryTypeIdentifier;
+  HKCategoryTypeIdentifier get categoryType => type as HKCategoryTypeIdentifier;
 }
 
 /// A source revision.
@@ -430,6 +482,21 @@ class OperatingSystemVersion {
         'minorVersion': minorVersion,
         'patchVersion': patchVersion,
       };
+}
+
+enum WorkoutEventType {
+  pause._(1),
+  resume._(2),
+  lap._(3),
+  marker._(4),
+  motionPause._(5),
+  motionResumed._(6),
+  segment._(7),
+  pauseOrResumeRequest._(8);
+
+  const WorkoutEventType._(this.code);
+
+  final int code;
 }
 
 /// A workout activity type.
