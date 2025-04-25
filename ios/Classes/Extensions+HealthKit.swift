@@ -37,9 +37,10 @@ extension HKQuantity {
         HKUnit.volt(),
         HKUnit.count().unitDivided(by: HKUnit.minute()),
         HKUnit.kilocalorie().unitDivided(by: HKUnit.minute()),
-        HKUnit.kilocalorie().unitDivided(by: HKUnit.hour().unitMultiplied(by: HKUnit.gramUnit(with: HKMetricPrefix.kilo))),
+        HKUnit.kilocalorie().unitDivided(
+            by: HKUnit.hour().unitMultiplied(by: HKUnit.gramUnit(with: HKMetricPrefix.kilo))),
         HKUnit.watt(),
-        HKUnit.kilocalorie()
+        HKUnit.kilocalorie(),
     ]
     var toJson: [String: Double] {
         var values: [String: Double] = [:]
@@ -56,7 +57,7 @@ extension HKQuantity {
 }
 
 extension HKQuantitySample {
-    func toJson(_ units: [HKQuantityType : HKUnit]) -> [String: Any] {
+    func toJson(_ units: [HKQuantityType: HKUnit]) -> [String: Any] {
         var values: [String: Double] = [:]
         if let type = sampleType as? HKQuantityType, let unit = units[type] {
             values[unit.unitString] = quantity.doubleValue(for: unit)
@@ -77,26 +78,26 @@ extension HKQuantitySample {
 }
 
 extension HKWorkout {
-    var toJson: [String: Any] {
+    func toJson(_ units: [HKQuantityType: HKUnit]) -> [String: Any] {
         var events: [Any] = []
         for event in (workoutEvents ?? []) {
             events.append([
                 "type": event.type,
                 "startTimestamp": event.dateInterval.start.timeIntervalSince1970,
-                "endTimestamp" : event.dateInterval.end.timeTintervalSince1970,
+                "endTimestamp": event.dateInterval.end.timeIntervalSince1970,
                 "duration": event.dateInterval.duration,
                 "metadata": metadataToJson(event.metadata),
             ])
         }
-        var statistics : [String: Any] = [:]
+        var statistics: [String: Any] = [:]
         for (quantityType, statistic) in allStatistics {
             if let unit = units[quantityType] {
                 statistics[quantityType.identifier] = [
-                    "unit": unit.unitString,
-                    "average" : statistic.averageQuantity?.doubleValue(for: unit),
-                    "total" : statistic.sumQuantity?.doubleValue(for: unit),
-                    "minimum" : statistic.minimumQuantity?.doubleValue(for: unit),
-                    "maximum" : statistic.maximumQuantity?.doubleValue(for: unit),
+                    "quantityType": quantityType.identifier,
+                    "average": statistic.averageQuantity()?.doubleValue(for: unit),
+                    "total": statistic.sumQuantity()?.doubleValue(for: unit),
+                    "minimum": statistic.minimumQuantity()?.doubleValue(for: unit),
+                    "maximum": statistic.maximumQuantity()?.doubleValue(for: unit),
                 ].compactMapValues { $0 }
             }
         }
@@ -117,16 +118,16 @@ extension HKWorkout {
 }
 
 extension HKCorrelation {
-    func toJson(_ units: [HKQuantityType : HKUnit]) -> [String: Any] {
+    func toJson(_ units: [HKQuantityType: HKUnit]) -> [String: Any] {
         return [
             "uuid": uuid.uuidString,
             "identifier": sampleType.identifier,
             "startTimestamp": startDate.timeIntervalSince1970,
             "endTimestamp": endDate.timeIntervalSince1970,
             "correlationType": correlationType.identifier,
-            "objects": objects.map {$0 as? HKQuantitySample }
+            "objects": objects.map { $0 as? HKQuantitySample }
                 .compactMap { $0 }
-                .map { $0.toJson(units)},
+                .map { $0.toJson(units) },
             "device": device?.toJson,
             "sourceRevision": sourceRevision.toJson,
             "metadata": metadataToJson(metadata),
@@ -135,7 +136,7 @@ extension HKCorrelation {
 }
 
 extension HKElectrocardiogram {
-    var toJson : [String: Any] {
+    var toJson: [String: Any] {
         return [
             "uuid": uuid.uuidString,
             "identifier": sampleType.identifier,
@@ -165,7 +166,7 @@ extension HKCategorySample {
             "metadata": metadataToJson(metadata),
             "device": device?.toJson,
             "sourceRevision": sourceRevision.toJson,
-            ]
+        ]
     }
 }
 
@@ -190,14 +191,14 @@ extension HKSourceRevision {
             "productType": productType,
             "version": version,
             "source": [
-                "name" : source.name,
-                "bundleIdentifier" : source.bundleIdentifier,
+                "name": source.name,
+                "bundleIdentifier": source.bundleIdentifier,
             ],
-            "operatingSystemVersion" : [
-                "minorVersion" : operatingSystemVersion.minorVersion,
-                "majorVersion" : operatingSystemVersion.majorVersion,
-                "patchVersion" : operatingSystemVersion.patchVersion,
-            ]
+            "operatingSystemVersion": [
+                "minorVersion": operatingSystemVersion.minorVersion,
+                "majorVersion": operatingSystemVersion.majorVersion,
+                "patchVersion": operatingSystemVersion.patchVersion,
+            ],
         ].compactMapValues { $0 }
     }
 }
