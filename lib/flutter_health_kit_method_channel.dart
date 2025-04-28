@@ -59,6 +59,29 @@ class MethodChannelFlutterHealthKit extends FlutterHealthKitPlatform {
       if (endDate != null) 'endDate': endDate.millisecondsSinceEpoch,
     }).map((e) => e as String);
   }
+ 
+ @override
+  Future<Stream<dynamic>> anchoredObjectQuery(
+    String type, {
+    DateTime? withStart,
+    DateTime? end,
+  }) async {
+    final channelId = await methodChannel.invokeMethod<String>('anchoredObjectQuery', <String, dynamic>{
+      'sampleType': type,
+      if (withStart != null || end != null)
+        'predicate': {
+          'code': 'predicateForSamples',
+          if (withStart != null) 'withStart': withStart.millisecondsSinceEpoch / 1000,
+          if (end != null) 'end': end.millisecondsSinceEpoch / 1000,
+        },
+    });
+
+    if (channelId == null) {
+      throw Exception('Failed to create event channel');
+    }
+
+    return EventChannel(channelId).receiveBroadcastStream();
+  }
 
   @override
   Future<List<Map<dynamic, dynamic>>> querySampleType(

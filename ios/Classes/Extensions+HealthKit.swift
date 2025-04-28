@@ -136,7 +136,10 @@ extension HKCorrelation {
 }
 
 extension HKElectrocardiogram {
-    var toJson: [String: Any] {
+    func toJson(_ voltageMeasurements: [Any]) -> [String: Any] {
+        let heartRateUnit = HKUnit(from: "counts/min")
+        let frequencyUnit = HKUnit.hertz()
+
         return [
             "uuid": uuid.uuidString,
             "identifier": sampleType.identifier,
@@ -149,7 +152,8 @@ extension HKElectrocardiogram {
             "symptomsStatus": symptomsStatus.rawValue,
             "device": device?.toJson,
             "sourceRevision": sourceRevision.toJson,
-            "metadata": metadataToJson(metadata),
+            "voltageMeasurements": voltageMeasurements,
+            "metadata": metadataToJson(metadata) as Any,
         ].compactMapValues { $0 }
     }
 }

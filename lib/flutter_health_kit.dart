@@ -77,6 +77,26 @@ class FlutterHealthKit {
     return stream.map((event) => ObjectTypeId.fromIdentifier(event));
   }
 
+  static Future<Stream<(List<T>, List<String>)>> anchoredObjectQuery<T extends Sample>(
+    ObjectTypeId type, {
+    DateTime? withStart,
+    DateTime? end,
+  }) async {
+    final stream = await FlutterHealthKitPlatform.instance.anchoredObjectQuery(
+      type.identifier,
+      withStart: withStart,
+      end: end,
+    );
+    return stream.map((e) {
+      final added = e['samples'] as List? ?? [];
+      final deleted = e['deleted'] as List? ?? [];
+      return (
+        added.map((e) => mappers[T]?.call(e)).whereType<T>().toList(),
+        deleted.map((e) => e as String).toList(),
+      );
+    });
+  }
+  
   /// Queries health data.
   ///
   /// [type] is the [SampleTypeId] to query.
